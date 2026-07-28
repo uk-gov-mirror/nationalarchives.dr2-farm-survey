@@ -4,6 +4,7 @@ import sqlite3
 import boto3
 from azure.identity import ClientAssertionCredential
 from azure.storage.blob import BlobServiceClient
+import datetime
 
 account_url = os.environ["AZURE_ACCOUNT_URL"]
 tenant_id = os.environ["AZURE_TENANT_ID"]
@@ -26,9 +27,15 @@ blob_service_client = BlobServiceClient(account_url=account_url, credential=cred
 container_client = blob_service_client.get_container_client("farms")
 pages = container_client.list_blob_names().by_page()
 
-conn = sqlite3.connect("farm-survey.db")
+start_date = datetime.datetime.now()
+conn = sqlite3.connect(f"farm-survey-{start_date}.db")
 cursor = conn.cursor()
+cursor.execute("PRAGMA journal_mode = WAL;")
+cursor.execute("PRAGMA synchronous = OFF;")
+cursor.execute("PRAGMA temp_store = MEMORY;")
+cursor.execute("PRAGMA cache_size = -524288;")
 cursor.execute("CREATE TABLE IF NOT EXISTS farm_survey_paths (filePath, originalName)")
+cursor.execute("BEGIN TRANSACTION;")
 
 total_files_retrieved = 0
 for page_no, page in enumerate(pages):
@@ -42,5 +49,9 @@ for page_no, page in enumerate(pages):
     conn.commit()
     file_paths_and_names_retrieved = len(file_paths_and_names)
     total_files_retrieved += file_paths_and_names_retrieved
-    print(f"Page {page_no + 1} - {total_files_retrieved} file paths and names written so far")
+    print(f"Page {page_no + 1} - {total_files_retrieved:,} file paths and names written so far")
+
+time_taken = datetime.datetime.now() - start_date
+mins, seconds = divmod(time_taken, 60)
+print(f"\nTask completed in {int(mins)} mins {seconds} seconds - {total_files_retrieved} rows written")
 conn.close()
