@@ -6,6 +6,7 @@ from unittest.mock import patch, MagicMock
 
 import lambda_function
 
+db_name = "farm_survey_test.db"
 image_magick_loc = "/opt/bin/convert" if platform == "linux" else "/usr/local/bin/magick"
 
 required_records_fields = {
@@ -479,6 +480,7 @@ class TestLambdaFunction(unittest.TestCase):
 
     @patch.dict(os.environ, {"DEST_BUCKET_FILES_PREFIX": "files_prefix", "DEST_BUCKET_RECORDS_PREFIX":
         "records_prefix"}, clear=True)
+    @patch("lambda_function.db_name", new=db_name)
     @patch("lambda_function.token_callback")
     @patch("lambda_function.get_container_client")
     @patch("lambda_function.s3_setup")
@@ -499,6 +501,7 @@ class TestLambdaFunction(unittest.TestCase):
 
     @patch.dict(os.environ, {"DEST_BUCKET_FILES_PREFIX": "files_prefix", "DEST_BUCKET_RECORDS_PREFIX":
         "records_prefix"}, clear=True)
+    @patch("lambda_function.db_name", new=db_name)
     @patch("lambda_function.token_callback")
     @patch("lambda_function.get_container_client")
     @patch("lambda_function.s3_setup")
@@ -520,6 +523,7 @@ class TestLambdaFunction(unittest.TestCase):
     @patch.dict(os.environ,
                 {"DEST_BUCKET_FILES_PREFIX": "files_prefix", "DEST_BUCKET_RECORDS_PREFIX": "records_prefix"},
                 clear=True)
+    @patch("lambda_function.db_name", new=db_name)
     @patch("lambda_function.token_callback")
     @patch("lambda_function.get_container_client")
     @patch("lambda_function.s3_setup")

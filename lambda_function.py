@@ -20,8 +20,13 @@ name_key = "name"
 original_name_key = "originalName"
 files_key = "files"
 update_scopes = {"RecordAndReplica", "RecordOnly"}
+db_name = "farm-survey.db"
 
-image_magick_loc = "/opt/bin/convert" if platform == "linux" else "/usr/local/bin/magick"
+if os.environ.get("RUNNING_IN_DOCKER") == "True":
+    image_magick_loc = "convert"
+else:
+    image_magick_loc = "/opt/bin/convert" if platform == "linux" else "/usr/local/bin/magick"
+
 new_file_extension = "jpg"
 
 
@@ -55,17 +60,17 @@ def get_container_client():
 
 def s3_setup():
     s3_client = boto3.client("s3")
-    aws_bucket = os.environ["DEST_BUCKET"]
+    dest_bucket = os.environ["DEST_BUCKET"]
 
     def upload_to_s3(bytes_to_write, file_name):
         body = io.BytesIO(bytes_to_write)
-        s3_client.upload_fileobj(body, aws_bucket, file_name)
+        s3_client.upload_fileobj(body, dest_bucket, file_name)
 
     return s3_client, upload_to_s3
 
 
-def get_json_metadata(s3_client, bucket, key):
-    response = s3_client.get_object(Bucket=bucket, Key=key)
+def get_json_metadata(s3_client, source_bucket, key):
+    response = s3_client.get_object(Bucket=source_bucket, Key=key)
     json_metadata = json.loads(response["Body"].read().decode("utf-8"))
     return json_metadata
 
@@ -122,12 +127,11 @@ def lambda_handler(event, context):
         s3_records = json.loads(event_record["body"])["Records"]
         for s3_record in s3_records:
             s3_event_info: dict = s3_record["s3"]
-            bucket = s3_event_info["bucket"]["name"]
+            source_bucket = s3_event_info["bucket"]["name"]
             s3_object = s3_event_info["object"]
             key = s3_object["key"]
-            batch_db_name = f"farm_survey_{key.split("/")[0]}"
 
-            json_metadata = get_json_metadata(s3_client, bucket, key)
+            json_metadata = get_json_metadata(s3_client, source_bucket, key)
 
             record = json_metadata["record"]
             replica = json_metadata["replica"]
@@ -145,14 +149,15 @@ def lambda_handler(event, context):
             if update_scope == "RecordAndReplica":
                 file_names_not_in_azure = []
                 all_image_metadata_by_path = {}
-                with closing(sqlite3.connect(f"{batch_db_name}.db")) as connection:
+                db_uri = f"file:{db_name}?mode=ro&immutable=1"
+                with closing(sqlite3.connect(db_uri, uri=True)) as connection:
                     with connection:
                         for image_metadata in all_image_metadata:
                             original_name = image_metadata[original_name_key]
 
                             blob_cursor = connection.cursor()
                             blob_cursor.execute(
-                                f"SELECT filePath FROM {batch_db_name} WHERE {original_name_key} = ?;",
+                                f"SELECT filePath FROM 'farm_survey_paths' WHERE {original_name_key} = ?;",
                                 (original_name,)
                             )
                             blob_info = blob_cursor.fetchone()
@@ -166,7 +171,8 @@ def lambda_handler(event, context):
                 if len(file_names_not_in_azure) > 0:
                     raise Exception(
                         f"{len(file_names_not_in_azure)} file(s) in the JSON were not found in Azure for IAID"
-                        f" {iaid}. These are the originalNames: '{", ".join(file_names_not_in_azure)}'")
+                        f" {iaid}. These are the originalNames: '{", ".join(file_names_not_in_azure)}'"
+                    )
 
                 images_metadata = []
                 for blob_path, image_metadata in all_image_metadata_by_path.items():
