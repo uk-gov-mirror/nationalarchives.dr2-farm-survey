@@ -1,4 +1,4 @@
-FROM alpine AS layer-extractor
+FROM alpine:3.24.1 AS layer-extractor
 FROM public.ecr.aws/lambda/python:3.14
 
 COPY requirements-tif-to-jpg.txt ${LAMBDA_TASK_ROOT}
@@ -6,8 +6,13 @@ RUN pip install -r requirements-tif-to-jpg.txt
 
 USER root
 
-RUN dnf update -y && \
-    dnf install -y libtiff libtiff-devel libjpeg-turbo libjpeg-turbo-devel ImageMagick ImageMagick-devel && \
+RUN dnf install -y \
+        libtiff-4.7.2 \
+        libtiff-devel-4.7.2 \
+        libjpeg-turbo-3.1.4 \
+        libjpeg-turbo-devel-3.1.4 \
+        ImageMagick-7.1.2-29 \
+        ImageMagick-devel-7.1.2-29 && \
     dnf clean all
 
 USER 1000
