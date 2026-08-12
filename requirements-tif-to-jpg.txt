@@ -1,6 +1,7 @@
 # Load all runtime and dev packages
-boto3
+azure.core
 azure.identity
 azure.storage.blob
-natsort
+boto3
+cryptography
 jsonschema

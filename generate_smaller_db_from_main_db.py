@@ -8,7 +8,7 @@ def generate_smaller_db_from_farm_survey_db(new_db_name, new_table_name, column_
     cursor = conn.cursor()
     cursor.execute("CREATE TABLE IF NOT EXISTS farm_survey_paths (filePath, originalName)")
 
-    fs_main_conn = sqlite3.connect("farm-survey.db")
+    fs_main_conn = sqlite3.connect("db/farm-survey.db")
     fs_main_cursor = fs_main_conn.cursor()
     fs_main_cursor.execute(
         f"SELECT * FROM farm_survey_paths WHERE {column_name} LIKE ?;", (like_value,)
@@ -28,4 +28,4 @@ if __name__ == "__main__":
     new_table_name = ""
     column_name = "" # filePath or originalName
     like_value = ""
-    generate_smaller_db_from_farm_survey_db(f"{new_db_name}.db", new_table_name, column_name, like_value)
+    generate_smaller_db_from_farm_survey_db(f"farm-survey_{new_db_name}.db", new_table_name, column_name, like_value)
