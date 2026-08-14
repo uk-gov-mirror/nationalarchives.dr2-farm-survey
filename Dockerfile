@@ -6,13 +6,14 @@ RUN pip install -r requirements-tif-to-jpg.txt
 
 USER root
 
+# RPM packages available to AL2023 https://docs.aws.amazon.com/linux/al2023/release-notes/all-packages-AL2023.12.html
 RUN dnf install -y \
-        libtiff-4.7.2 \
-        libtiff-devel-4.7.2 \
-        libjpeg-turbo-3.1.4 \
-        libjpeg-turbo-devel-3.1.4 \
-        ImageMagick-7.1.2-29 \
-        ImageMagick-devel-7.1.2-29 && \
+        libtiff-4.4.0-4.amzn2023.0.27 \
+        libtiff-devel-4.4.0-4.amzn2023.0.27 \
+        libjpeg-turbo-2.1.4-2.amzn2023.0.5 \
+        libjpeg-turbo-devel-2.1.4-2.amzn2023.0.5 \
+        ImageMagick-6.9.13.50-1.amzn2023.0.2 \
+        ImageMagick-devel-6.9.13.50-1.amzn2023.0.2 && \
     dnf clean all
 
 USER 1000
