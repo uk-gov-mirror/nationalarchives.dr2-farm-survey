@@ -69,7 +69,7 @@ module "dr2_convert_tif_to_jpg_lambda" {
     ignore_enabled_status = true
   }]
   policies = {
-    "${local.tif_to_jpg_lambda_name}-policy" = templatefile("./templates/iam_policy/farm_survey_lambda_policy.json.tpl", {
+    "${local.tif_to_jpg_lambda_name}-policy" = templatefile("./templates/iam_policy/tif_to_jpg_lambda_policy.json.tpl", {
       account_id               = sensitive(local.account_id)
       lambda_name              = local.tif_to_jpg_lambda_name
       queue_name               = local.farm_survey_s3_queue_name
@@ -106,7 +106,7 @@ module "tif_to_jpg_lambda_repo" {
   source          = "git::https://github.com/nationalarchives/da-terraform-modules.git//ecr"
   repository_name = local.tif_to_jpg_lambda_name_repo
   common_tags     = {}
-  repository_policy = templatefile("./templates/iam_policy/ecr_policy.json.tpl", {
+  repository_policy = templatefile("./templates/iam_policy/tif_to_jpg_ecr_policy.json.tpl", {
     account_id  = local.account_id
     lambda_name = local.tif_to_jpg_lambda_name
   })

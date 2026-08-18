@@ -10,12 +10,7 @@
       "Action": [
         "ecr:BatchGetImage",
         "ecr:GetDownloadUrlForLayer"
-      ],
-      "Condition": {
-        "ArnEquals": {
-          "aws:SourceArn": "arn:aws:lambda:region:${account_id}:function:${lambda_name}"
-        }
-      }
+      ]
     }
   ]
 }
